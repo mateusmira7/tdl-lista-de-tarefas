@@ -1,0 +1,12 @@
+{
+  "name": "tdl-lista-de-tarefas",
+  "version": "1.0.0",
+  "description": "Lista de tarefas simples — projeto de apoio para o PGCS (Enfoque DevOps)",
+  "main": "src/app.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
