@@ -1,0 +1,34 @@
+name: Funcionalidade
+description: Sugerir uma nova funcionalidade ou melhoria
+title: "[Funcionalidade] "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área
+      description: Qual parte do app será afetada?
+      options:
+        - Interface (HTML/CSS)
+        - Lógica das tarefas (JavaScript)
+        - Testes (Jest)
+        - Pipeline (GitHub Actions)
+        - Documentação
+    validations:
+      required: true
+  - type: textarea
+    id: descricao
+    attributes:
+      label: O que você quer que o app faça?
+    validations:
+      required: true
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Como saber que está pronto?
+      description: Critérios de aceitação, em lista.
+      placeholder: |
+        - [ ] Consigo marcar uma tarefa como concluída
+        - [ ] O estado fica visível na lista
+    validations:
+      required: false
