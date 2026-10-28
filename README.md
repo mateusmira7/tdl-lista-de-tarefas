@@ -1,18 +1,20 @@
 # TDL — Lista de Tarefas
 
-Aplicação web simples (HTML/CSS/JS puro) de lista de tarefas, criada como
-projeto de apoio para a disciplina de Gerência, Configuração e Processos
-de Software (Plano de Gerenciamento de Configuração — Enfoque DevOps).
+Aplicação web de lista de tarefas, feita em HTML, CSS e JavaScript, com testes automatizados em Jest.
 
-## Rodar localmente
-Basta abrir `src/index.html` no navegador.
+## Estrutura
+- `src/`: código da aplicação (index.html, style.css, app.js, utils.js)
+- `tests/`: testes unitários (Jest)
+- `docs/`: documentação, incluindo o Plano de Gerenciamento de Configuração (PGCS)
+- `.github/workflows/`: pipeline de CI/CD (GitHub Actions)
 
-## Rodar os testes
-```
-npm install
-npm test
-```
+## Como rodar
+Abra o arquivo `src/index.html` no navegador.
 
-## Pipeline
-- **CI** (`.github/workflows/ci.yml`): a cada push/PR, instala dependências e roda os testes unitários das funções em `src/utils.js`.
-- **CD** (`.github/workflows/deploy.yml`): a cada push na branch `main`, publica o conteúdo de `src/` no GitHub Pages automaticamente.
+## Como rodar os testes
+Requer Node.js instalado.
+    npm install
+    npm test
+
+## Publicação
+A aplicação é publicada automaticamente no GitHub Pages pelo pipeline.
