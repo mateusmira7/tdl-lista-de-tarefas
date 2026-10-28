@@ -1,0 +1,29 @@
+name: Defeito
+description: Relatar algo que não funciona como deveria
+title: "[Defeito] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: descricao
+    attributes:
+      label: O que aconteceu?
+      description: Descreva o problema com poucas palavras.
+    validations:
+      required: true
+  - type: textarea
+    id: passos
+    attributes:
+      label: Como reproduzir
+      description: Liste os passos para o erro aparecer.
+      placeholder: |
+        1. Abrir a aplicação
+        2. Adicionar uma tarefa
+        3. Clicar em excluir
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: O que deveria acontecer?
+    validations:
+      required: true
