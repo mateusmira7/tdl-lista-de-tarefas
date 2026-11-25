@@ -1,0 +1,55 @@
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag da Release a republicar (ex.: v1.0.0)"
+        required: true
+        type: string
+
+run-name: "Rollback para ${{ inputs.tag }}"
+
+concurrency:
+  group: producao
+  cancel-in-progress: false
+
+jobs:
+  production:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    env:
+      TAG: ${{ inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Conferir se a Release existe
+        run: |
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Tag inválida: use vX.Y.Z"; exit 1; }
+          gh release view "$TAG" > /dev/null
+
+      - name: Checkout da tag
+        uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Publicar artefato (pasta src)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "src"
+
+      - name: Deploy no GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Marcar a Release como Latest
+        run: gh release edit "$TAG" --latest

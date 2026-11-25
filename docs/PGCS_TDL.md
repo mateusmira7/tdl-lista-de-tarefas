@@ -1,6 +1,6 @@
 # Plano de Gerenciamento de Configuração — Enfoque DevOps
 
-**TDL — Lista de Tarefas** · Integração e Entrega Contínuas (CI/CD) · Versão 1.1
+**TDL — Lista de Tarefas** · Integração e Entrega Contínuas (CI/CD) · Versão 1.2
 
 | Campo | Descrição |
 |---|---|
@@ -18,6 +18,7 @@
 |---|---|---|---|
 | 23/09/2026 | 1.0 | Elaboração do PGCS do projeto TDL a partir do template da disciplina. | Mateus |
 | 28/10/2026 | 1.1 | Inclusão do par de revisão, proteção da `main`, Environments `staging` e `production`; remoção de itens do template que não se aplicam ao projeto. | Mateus |
+| 25/11/2026 | 1.2 | CD separado em `cd.yml` (`staging` → `production` → Release automática) e inclusão do workflow Rollback. | Mateus |
 
 ---
 
@@ -188,14 +189,13 @@ Para o merge: todos os testes Jest passando, instalação das dependências sem 
 
 ### 6.1 Etapas do Pipeline de CD
 
-Após o merge na `main`, o mesmo workflow executa:
+Após o merge na `main` e o sucesso do workflow de CI, o workflow `cd.yml` executa:
 
-1. Testes (job de CI).
-2. Job `staging`: executa no Environment `staging` e valida a versão.
-3. **Gate de aprovação:** o job `production` fica pausado até **Mateus aprovar** (revisor obrigatório do Environment `production`).
-4. Job `production`: publica a aplicação no GitHub Pages.
+1. Job `staging`: instala as dependências e roda os testes no Environment `staging`.
+2. **Gate de aprovação:** o job `production` fica pausado até **Mateus aprovar** (revisor obrigatório do Environment `production`).
+3. Job `production`: publica a aplicação no GitHub Pages.
+4. Em commits `feat` ou `fix` (ou com quebra de compatibilidade), cria a tag `vX.Y.Z` e a Release.
 5. Conferência manual da página publicada.
-6. Criação da tag de release (`vX.Y.Z`).
 
 ### 6.2 Estratégia de Implantação
 
@@ -203,10 +203,8 @@ O GitHub Pages substitui a versão publicada de uma só vez (deploy atômico). N
 
 ### 6.3 Rollback e Recuperação
 
-A versão anterior é recuperada por uma das opções:
-
-- reverter o commit problemático via Pull Request (`git revert`), o que dispara novo deploy;
-- reexecutar, na aba Actions, o workflow de um commit anterior que estava correto.
+- **Restaurar o serviço:** em Actions → Rollback → Run workflow, informar a tag de uma Release anterior e aprovar o deploy em `production`. A tag é republicada e marcada como Latest, sem alterar a `main`.
+- **Corrigir o código:** reverter ou corrigir o commit problemático via Pull Request (`git revert` ou branch `hotfix/...`), o que gera novo deploy.
 
 ---
 
