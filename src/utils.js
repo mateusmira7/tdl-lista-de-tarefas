@@ -6,6 +6,10 @@ function addTask(tasks, title) {
   if (!trimmed) {
     throw new Error("O título da tarefa não pode ser vazio.");
   }
+    const jaExiste = tasks.some((t) => t.title.toLowerCase() === trimmed.toLowerCase());
+  if (jaExiste) {
+    throw new Error("Já existe uma tarefa com esse título.");
+  }
   const nextId = tasks.length > 0 ? Math.max(...tasks.map((t) => t.id)) + 1 : 1;
   return [...tasks, { id: nextId, title: trimmed, done: false }];
 }
