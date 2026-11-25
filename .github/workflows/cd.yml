@@ -1,0 +1,102 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    branches: [main]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: producao
+  cancel-in-progress: false
+
+jobs:
+  staging:
+    # Só segue se o CI de um push na main ficou verde.
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout do commit validado pelo CI
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Validar a versão
+        run: npm test
+
+  production:
+    needs: staging
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout do commit validado pelo CI
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Publicar artefato (pasta src)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "src"
+
+      - name: Deploy no GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Criar tag e Release (SemVer a partir do Conventional Commit)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          if git tag --points-at "$SHA" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Este commit já tem versão. Nada a fazer."
+            exit 0
+          fi
+          assunto=$(git log -1 --pretty=%s "$SHA")
+          corpo=$(git log -1 --pretty=%b "$SHA")
+          if grep -Eq '^[a-z]+(\([^)]*\))?!:' <<<"$assunto" || grep -q '^BREAKING CHANGE:' <<<"$corpo"; then
+            nivel=major
+          elif grep -Eq '^feat(\([^)]*\))?:' <<<"$assunto"; then
+            nivel=minor
+          elif grep -Eq '^fix(\([^)]*\))?:' <<<"$assunto"; then
+            nivel=patch
+          else
+            echo "Commit sem feat ou fix: publicado sem nova versão."
+            exit 0
+          fi
+          ultima=$(git tag --list 'v*.*.*' --sort=-v:refname | head -n1)
+          if [ -z "$ultima" ]; then
+            nova=v1.0.0
+          else
+            IFS=. read -r major minor patch <<<"${ultima#v}"
+            case $nivel in
+              major) nova="v$((major + 1)).0.0" ;;
+              minor) nova="v${major}.$((minor + 1)).0" ;;
+              patch) nova="v${major}.${minor}.$((patch + 1))" ;;
+            esac
+          fi
+          gh release create "$nova" --target "$SHA" --title "$nova" --generate-notes --latest
