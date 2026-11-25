@@ -30,3 +30,7 @@ test("filterTasks filtra corretamente pendentes e concluídas", () => {
   expect(filterTasks(tasks, "pending")).toHaveLength(1);
   expect(filterTasks(tasks, "all")).toHaveLength(2);
 });
+test("addTask recusa título duplicado, ignorando maiúsculas e espaços", () => {
+  const tasks = addTask([], "Estudar GCS");
+  expect(() => addTask(tasks, "  estudar gcs ")).toThrow("Já existe uma tarefa com esse título.");
+});
