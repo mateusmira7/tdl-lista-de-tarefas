@@ -37,6 +37,13 @@ jobs:
       - name: Validar a versão
         run: npm test
 
+      # O envio fica em um job anterior ao deploy: no mesmo job, o deploy-pages
+      # às vezes não encontra o artefato recém-enviado.
+      - name: Publicar artefato (pasta src)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "src"
+
   production:
     needs: staging
     runs-on: ubuntu-latest
@@ -53,14 +60,6 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
-
-      - name: Configurar GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Publicar artefato (pasta src)
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: "src"
 
       - name: Deploy no GitHub Pages
         id: deployment
