@@ -14,20 +14,18 @@ concurrency:
   group: producao
   cancel-in-progress: false
 
+env:
+  TAG: ${{ inputs.tag }}
+  GH_TOKEN: ${{ github.token }}
+  GH_REPO: ${{ github.repository }}
+
 jobs:
-  production:
+  # O envio fica em um job anterior ao deploy: no mesmo job, o deploy-pages
+  # às vezes não encontra o artefato recém-enviado.
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: ${{ steps.deployment.outputs.page_url }}
     permissions:
-      contents: write
-      pages: write
-      id-token: write
-    env:
-      TAG: ${{ inputs.tag }}
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
+      contents: read
     steps:
       - name: Conferir se a Release existe
         run: |
@@ -39,14 +37,22 @@ jobs:
         with:
           ref: refs/tags/${{ inputs.tag }}
 
-      - name: Configurar GitHub Pages
-        uses: actions/configure-pages@v5
-
       - name: Publicar artefato (pasta src)
         uses: actions/upload-pages-artifact@v3
         with:
           path: "src"
 
+  production:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
       - name: Deploy no GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
